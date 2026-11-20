@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { get_system_stats, system_stats } from './diagnostics/system.js';
 import { get_disk_stats, disk_stats } from './diagnostics/disk.js';
 import { get_cpu_stats, cpu_stats } from './diagnostics/cpu.js';
@@ -8,6 +9,8 @@ import { maybe_install_task } from './utils/install_task.js';
 
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('SelfHealingWindows API - Endpoints: /all, /system, /disk, /cpu, /memory, /pi/ask, /pi/heal');
