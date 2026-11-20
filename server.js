@@ -4,6 +4,7 @@ import { get_disk_stats, disk_stats } from './diagnostics/disk.js';
 import { get_cpu_stats, cpu_stats } from './diagnostics/cpu.js';
 import { get_memory_stats, ram_stats, process_memory } from './diagnostics/memory.js';
 import { pi_ask, pi_heal } from './prompt_pi.js';
+import { maybe_install_task } from './utils/install_task.js';
 
 const app = express();
 const port = 3000;
@@ -19,7 +20,7 @@ app.get('/pi/ask', async (req, res) => {
 
 app.get('/pi/heal', async (req, res) => {
   const reply = await pi_heal();
-  res.json(reply);
+  res.type('text/plain').send(reply);
 });
 
 app.get('/all', async (req, res) => {
@@ -60,4 +61,5 @@ app.get('/memory', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`server.js listening on port ${port}`);
+  maybe_install_task().catch(e => console.log('task prompt failed: ' + e.message));
 });

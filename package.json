@@ -8,6 +8,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
+    "install-task": "node -e \"import('./utils/install_task.js').then(m => m.install_task())\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
