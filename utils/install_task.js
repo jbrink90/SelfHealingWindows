@@ -1,4 +1,4 @@
-import { execAsync } from './execAsync.js';
+import execAsync from './execAsync.js';
 import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
