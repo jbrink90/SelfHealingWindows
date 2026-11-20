@@ -79,7 +79,7 @@ Rules:
     try {
         plan = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
     } catch {
-        return { error: 'pi did not return a kill plan', raw };
+        return `pi did not return a kill plan.\n\n${raw}`;
     }
 
     const offenders = new Set([
@@ -100,12 +100,34 @@ Rules:
     if (!result_text) {
         const err_text = await readFile(kill_result_file + '.err', 'utf8').catch(() => null);
         await rm(kill_result_file + '.err', { force: true });
-        return { plan, error: 'kill script produced no result', detail: err_text?.trim(), pids_attempted: pids };
+        return `kill script produced no result${err_text?.trim() ? `: ${err_text.trim()}` : ''}\n\npi's plan: ${JSON.stringify(plan.kill ?? [])}`;
     }
     await rm(kill_result_file, { force: true });
     const result = JSON.parse(result_text.replace(/^\uFEFF/, '').trim());
     result.skipped = [...(result.skipped ?? []), ...rejected];
-    return { plan, result };
+    return format_heal(plan, result);
+};
+
+const format_heal = (plan, result) => {
+    const killed_ids = new Set((result?.killed ?? []).map(k => k.id));
+    const skip_reasons = new Map((result?.skipped ?? []).map(s => [s.id, s.reason ?? 'skipped']));
+    const lines = ['Heal report:', ''];
+    let any = false;
+    for (const k of plan?.kill ?? []) {
+        any = true;
+        const id = Number(k.id);
+        const label = [k.name, `pid ${id}`].filter(Boolean).join(' ');
+        const reason = strip_markdown(String(k.reason ?? ''));
+        if (killed_ids.has(id)) {
+            lines.push(`KILLED   ${label}: ${reason}`);
+        } else {
+            lines.push(`SKIPPED  ${label}: ${strip_markdown(skip_reasons.get(id) ?? 'not executed')}`);
+        }
+    }
+    if (!any) lines.push('nothing identified for termination');
+    const notes = plan?.notes && strip_markdown(String(plan.notes));
+    if (notes) lines.push('', `Notes: ${notes}`);
+    return lines.join('\n');
 };
 
 const pi_ask = async () => await ask_pi(await collect_stats());
